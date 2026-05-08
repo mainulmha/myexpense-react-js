@@ -1,16 +1,16 @@
-import { useState } from 'react'
+import { RouterProvider } from 'react-router-dom'
 import './App.css'
-import Navbar from '@/components/ui/Navbar'
-import Footer from '@/components/ui/Footer'
+
+import router from '@/routes/router'
+
 // import reactLogo from './assets/react.svg'
 
 
 function App() {
   return (
-    <div className="">
-      <Navbar />
-      <Footer />
-    </div>
+    <>
+      <RouterProvider router={router} />
+    </>
   )
 }
 

@@ -190,20 +190,6 @@ jsconfig.json
 
 # Step 4 — VS Code Restart
 
-### VS Code এ:
-
-```txt id="v1d8pr"
-Ctrl + Shift + P
-```
-
-তারপর search:
-
-```txt id="r9f3ku"
-TypeScript: Restart TS Server
-```
-
----
-
 # Step 5 — Use Alias
 
 এখন import করতে পারবা:
@@ -230,7 +216,6 @@ src/
  ├── utils/
  └── App.jsx
 ```
-
 
 - [ ] Install required packages
 
@@ -269,6 +254,416 @@ npm i -D prettier
 - [ ] Create Navbar
 - [ ] Create Mobile Navigation
 - [ ] Responsive Layout Fixes
+
+---
+
+````md id="f4n8kp"
+> React Router Architecture  
+> Production Grade Layout & Route Structure
+
+---
+
+# APPLICATION FLOW
+
+```txt
+main.jsx
+   ↓
+App.jsx
+   ↓
+RouterProvider
+   ↓
+router.jsx
+   ↓
+Layouts
+   ↓
+Pages
+```
+````
+
+---
+
+# 1. main.jsx
+
+## Purpose
+
+Application entry point.
+
+## Responsibilities
+
+- Render React App
+- Enable StrictMode
+- Load global CSS
+- Render App component
+
+---
+
+## Current Structure
+
+```js
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.jsx";
+
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+```
+
+---
+
+# 2. App.jsx
+
+## Purpose
+
+Global application wrapper.
+
+## Responsibilities
+
+- RouterProvider
+- Global Toaster
+
+- Future Providers
+  - AuthProvider
+  - ThemeProvider
+  - QueryClientProvider
+
+---
+
+## Current Structure
+
+```js
+import { RouterProvider } from "react-router-dom";
+import router from "./router/router";
+import { Toaster } from "react-hot-toast";
+
+function App() {
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster position="top-right" />
+    </>
+  );
+}
+
+export default App;
+```
+
+---
+
+# 3. Router System
+
+## File Location
+
+```txt
+src/router/router.jsx
+```
+
+---
+
+## Purpose
+
+Centralized route management system.
+
+---
+
+# ROUTE STRUCTURE
+
+## Protected Routes
+
+```txt
+/dashboard
+/analysis
+/profile
+/settings
+/report
+```
+
+These routes require authentication.
+
+---
+
+## Public Routes
+
+```txt
+/login
+/signup
+/verify-email
+/oauth-success
+```
+
+Accessible without login.
+
+---
+
+# 4. PrivateRoute
+
+## Purpose
+
+Protect authenticated pages.
+
+If user is not logged in:
+
+- Redirect to `/login`
+
+If logged in:
+
+- Render protected content
+
+---
+
+## Flow
+
+```txt
+User visits protected route
+        ↓
+PrivateRoute checks auth
+        ↓
+If false → /login
+If true  → Render page
+```
+
+---
+
+## Current Structure
+
+```js
+const PrivateRoute = ({ children }) => {
+  const isLoggedIn = false;
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" />;
+  }
+
+  return children;
+};
+```
+
+---
+
+# 5. AppLayout
+
+## Purpose
+
+Main application layout for authenticated users.
+
+---
+
+## Responsibilities
+
+- Header/Navbar
+- Sidebar
+- Footer
+- Main Content Area
+- Outlet Rendering
+
+---
+
+## Layout Structure
+
+```txt
+AppLayout
+ ├── Header
+ ├── Sidebar
+ ├── Main Content (Outlet)
+ └── Footer
+```
+
+---
+
+# 6. AuthLayout
+
+## Purpose
+
+Layout for authentication pages.
+
+---
+
+## Responsibilities
+
+- Clean auth UI
+- Centered auth forms
+- Minimal layout
+
+---
+
+## Used For
+
+```txt
+/login
+/signup
+/verify-email
+```
+
+---
+
+# 7. Navbar/Header
+
+## Purpose
+
+Global navigation system.
+
+---
+
+## Responsibilities
+
+- Logo
+- Navigation Links
+- User Profile
+- Logout Button
+- Mobile Menu
+
+---
+
+# 8. Footer
+
+## Purpose
+
+Global footer component.
+
+---
+
+## Responsibilities
+
+- Copyright
+- Links
+- Branding
+
+---
+
+# 9. Outlet System
+
+## Purpose
+
+Render child routes inside layouts.
+
+---
+
+## Example
+
+```js
+<AppLayout>
+  <Outlet />
+</AppLayout>
+```
+
+When route changes:
+
+- Only Outlet content changes
+- Layout remains persistent
+
+---
+
+# 10. Redirect Flow
+
+## Default Redirect
+
+```txt
+/
+ → /dashboard
+```
+
+---
+
+## Login Flow
+
+```txt
+User Login Success
+      ↓
+navigate("/dashboard")
+```
+
+---
+
+# 11. Route Matching Flow
+
+## Example
+
+```txt
+localhost:5173/dashboard
+```
+
+Flow:
+
+```txt
+main.jsx
+  ↓
+App.jsx
+  ↓
+RouterProvider
+  ↓
+router.jsx
+  ↓
+PrivateRoute
+  ↓
+AppLayout
+  ↓
+Dashboard Page
+```
+
+---
+
+# 12. Current Architecture Type
+
+## Architecture Style
+
+- Modular Architecture
+- Layout Based Routing
+- Protected Route System
+- SaaS/ERP Structure
+- Scalable Frontend Architecture
+
+---
+
+# 13. Production Benefits
+
+## Advantages
+
+- Clean structure
+- Easy scaling
+- Maintainable codebase
+- Route separation
+- Reusable layouts
+- Enterprise friendly
+- Better developer experience
+
+---
+
+# 14. Future Improvements
+
+## Planned Additions
+
+- Zustand Auth Store
+- Dynamic Sidebar
+- Role Based Routing
+- Admin Routes
+- Lazy Loading
+- Route Guards
+- Breadcrumb System
+- Theme Provider
+- Global Modal System
+
+---
+
+# FINAL SUMMARY
+
+## Current Setup Includes
+
+- React Router Setup
+- Protected Routes
+- Auth Layout
+- App Layout
+- Navbar/Header
+- Footer
+- Global App Wrapper
+- Route Based Architecture
+- Production Ready Structure
+
+```
+
+```
 
 ---
 
