@@ -224,8 +224,6 @@ npm i react-router-dom axios zustand react-hook-form zod recharts react-hot-toas
 npm i -D prettier
 ```
 
-- [ ] Setup environment variables
-
 ### Packages
 
 - react-router-dom
@@ -241,6 +239,157 @@ npm i -D prettier
 - jspdf-autotable
 - xlsx
 - file-server
+
+---
+
+- [ ] Setup environment variables
+
+চল, এটা আমি তোমাকে একদম real SaaS / production style এ সাজিয়ে দিচ্ছি 😄
+এভাবে করলে তুমি পরে dev → staging → production easily manage করতে পারবে।
+
+---
+
+# 1. Multiple Environment Files Setup
+
+Project root এ 3টা `.env` file রাখো:
+
+```txt id="env1"
+.env
+.env.development
+.env.production
+```
+
+---
+
+# 2. Development (.env.development)
+
+```env id="dev1"
+VITE_API_BASE_URL=http://localhost:5000
+VITE_APP_NAME=Expense Manager (Dev)
+```
+
+---
+
+# 3. Production (.env.production)
+
+```env id="prod1"
+VITE_API_BASE_URL=https://api.yourdomain.com
+VITE_APP_NAME=Expense Manager
+```
+
+---
+
+# 4. Default (.env) (optional)
+
+```env id="default1"
+VITE_APP_NAME=Expense Manager
+```
+
+---
+
+# 5. React/Vite এ use করা
+
+```js id="use1"
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+```
+
+---
+
+# 6. Axios Setup (Best Practice)
+
+👉 আলাদা file বানাও:
+
+```txt id="api1"
+src/services/api.js
+```
+
+```js id="api2"
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
+});
+
+export default api;
+```
+
+---
+
+# 7. Development vs Production Switch (Vite handles automatically)
+
+Vite নিজে environment detect করে:
+
+| Mode          | File             |
+| ------------- | ---------------- |
+| npm run dev   | .env.development |
+| npm run build | .env.production  |
+
+---
+
+# 8. Run Commands
+
+## Dev Mode
+
+```bash id="run1"
+npm run dev
+```
+
+→ uses `.env.development`
+
+---
+
+## Production Build
+
+```bash id="run2"
+npm run build
+```
+
+→ uses `.env.production`
+
+---
+
+# 9. Production Deploy Example Flow
+
+```txt id="flow1"
+Frontend (Vercel/Netlify)
+        ↓
+API calls
+        ↓
+Backend (Render / VPS / Railway)
+        ↓
+MongoDB Atlas
+```
+
+---
+
+# 10. Best SaaS Practice (Important)
+
+## Always do this ✅
+
+```js id="good1"
+axios.get(`${import.meta.env.VITE_API_BASE_URL}/api`);
+```
+
+---
+
+# 11. Bonus (Professional Upgrade)
+
+## Optional: env validation
+
+```bash id="bonus1"
+npm i zod
+```
+
+```js id="bonus2"
+import { z } from "zod";
+
+const envSchema = z.object({
+  VITE_API_BASE_URL: z.string().url(),
+});
+
+envSchema.parse(import.meta.env);
+```
 
 ---
 
@@ -392,6 +541,55 @@ These routes require authentication.
 /signup
 /verify-email
 /oauth-success
+```
+
+```js
+import { createBrowserRouter, Navigate } from "react-router-dom";
+
+import AuthLayout from "@/layouts/AuthLayout";
+import Signin from "@/pages/auth/Signin";
+import Signup from "@/pages/auth/Signup";
+import VerifyEmail from "@/pages/auth/VerifyEmail";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import Dashboard from "@/pages/auth/Dashboard";
+import AppLayout from "@/layouts/AppLayout";
+import Charts from "@/pages/Charts";
+import Profile from "@/pages/Profile";
+import Report from "@/pages/Report";
+import PrivateRoute from "./PrivateRoute";
+import Settings from "@/pages/Settings";
+
+const router = createBrowserRouter([
+  // Private Router
+  {
+    element: (
+      <PrivateRoute>
+        <AppLayout />
+      </PrivateRoute>
+    ),
+    children: [
+      { path: "/", element: <Navigate to="/dashboard" /> },
+      { path: "/dashboard", element: <Dashboard /> },
+      { path: "/charts", element: <Charts /> },
+      { path: "/profile", element: <Profile /> },
+      { path: "/settings", element: <Settings /> },
+      { path: "/report", element: <Report /> },
+    ],
+  },
+
+  // Public Router
+  {
+    element: <AuthLayout />,
+    children: [
+      { path: "/login", element: <Signin /> },
+      { path: "/signup", element: <Signup /> },
+      { path: "/verify-email", element: <VerifyEmail /> },
+      { path: "/forgot-password", element: <ForgotPassword /> },
+    ],
+  },
+]);
+
+export default router;
 ```
 
 Accessible without login.
@@ -679,6 +877,381 @@ Dashboard Page
 - [ ] Toast Notification Setup
 
 ---
+
+হ্যাঁ 😄
+তুমি newest Tailwind + Vite setup use করতেছো, তাই এখন অনেক project এ আর `tailwind.config.js` automatically থাকে না।
+
+Especially Tailwind v4 এ setup অনেক simplify হয়েছে।
+
+---
+
+# তোমার এখন কী করা উচিত?
+
+তুমি যেহেতু modern setup use করতেছো, তোমার জন্য best হবে:
+
+- CSS variable theme system
+- `dark` class toggle
+- custom utility classes
+- config-less Tailwind approach
+
+এটাই latest style 😄
+
+---
+
+# Modern Tailwind v4 Theme Setup
+
+## Step 1 — index.css
+
+তোমার `src/index.css` এ এটা রাখো:
+
+```css id="tw1"
+@import "tailwindcss";
+
+/* =========================
+   LIGHT THEME
+========================= */
+
+:root {
+  --bg: #ffffff;
+  --surface: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+}
+
+/* =========================
+   DARK THEME
+========================= */
+
+.dark {
+  --bg: #020617;
+  --surface: #0f172a;
+  --card: #111827;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --border: rgba(31, 41, 55, 0.5);
+}
+
+/* =========================
+   REUSABLE COMPONENTS
+========================= */
+
+@layer components {
+  .app-page {
+    @apply min-h-screen bg-[var(--bg)] text-[var(--text)] transition-all;
+  }
+
+  .app-card {
+    @apply bg-[var(--card)]
+    border
+    border-[var(--border)]
+    rounded-2xl
+    shadow-xl;
+  }
+
+  .app-input {
+    @apply bg-[var(--surface)]
+    border
+    border-[var(--border)]
+    rounded-xl
+    text-[var(--text)]
+    outline-none;
+  }
+
+  .app-button {
+    @apply bg-blue-600
+    hover:bg-blue-500
+    text-white
+    rounded-xl
+    transition-all
+    active:scale-95;
+  }
+}
+```
+
+---
+
+# Step 2 — App.jsx
+
+```jsx id="tw2"
+function App() {
+  return (
+    <div className="app-page">
+      <RouterProvider router={router} />
+      <Toaster position="top-right" />
+    </div>
+  );
+}
+```
+
+---
+
+# Step 3 — Theme Toggle
+
+```jsx id="tw3"
+const toggleTheme = () => {
+  document.documentElement.classList.toggle("dark");
+};
+```
+
+---
+
+# Step 4 — Use Anywhere
+
+```jsx id="tw4"
+<div className="app-card p-6">
+  <h1 className="text-xl font-bold">Dashboard</h1>
+</div>
+```
+
+---
+
+# Important
+
+তোমার latest Tailwind setup এ:
+
+```css id="tw5"
+@import "tailwindcss";
+```
+
+এইটাই enough 😄
+
+আগের মতো:
+
+- tailwind.config.js
+- postcss.config.js
+  সবসময় লাগে না এখন।
+
+---
+
+# Result
+
+এখন তোমার app এ থাকবে:
+
+✅ Dark mode
+✅ Light mode
+✅ Reusable design system
+✅ Production-grade architecture
+✅ SaaS-style theme system
+✅ Centralized colors
+✅ Easy future customization
+
+Dark mode check দিতে খুব easy 😄
+
+তুমি যেহেতু `.dark` class based system use করতেছো, তাই browser এ manually class add করলেই dark mode কাজ করবে।
+
+---
+
+# Method 1 — Simple Button Toggle (Best)
+
+## App.jsx
+
+```jsx id="dm1"
+import { useState } from "react";
+
+function App() {
+  const [dark, setDark] = useState(false);
+
+  const toggleTheme = () => {
+    document.documentElement.classList.toggle("dark");
+    setDark(!dark);
+  };
+
+  return (
+    <div className="app-page">
+      <button onClick={toggleTheme} className="app-button px-4 py-2 m-4">
+        {dark ? "Light Mode" : "Dark Mode"}
+      </button>
+
+      <div className="app-card p-6 m-4">Dashboard Card</div>
+    </div>
+  );
+}
+
+export default App;
+```
+
+---
+
+# কী হবে?
+
+Button click করলে:
+
+```js id="dm2"
+document.documentElement.classList.toggle("dark");
+```
+
+এটা HTML tag এ:
+
+```html id="dm3"
+<html class="dark"></html>
+```
+
+add/remove করবে।
+
+---
+
+# তখন CSS variables change হবে
+
+```css id="dm4"
+.dark {
+  --bg: #020617;
+}
+```
+
+activate হবে 😄
+
+---
+
+change হলেই পুরো app theme change হয়ে যাবে।
+
+হ্যাঁ, অবশ্যই 😄
+Production app এ theme logic আলাদা করাই best practice।
+তাহলে `App.jsx` clean থাকবে।
+
+---
+
+# Best Structure
+
+```txt id="th1"
+src/
+├── context/
+│    └── ThemeProvider.jsx
+│
+├── hooks/
+│    └── useTheme.js
+│
+├── App.jsx
+└── main.jsx
+```
+
+---
+
+# Step 1 — ThemeProvider বানাও
+
+## src/context/ThemeProvider.jsx
+
+```jsx id="th2"
+import { createContext, useEffect, useState } from "react";
+
+export const ThemeContext = createContext();
+
+const ThemeProvider = ({ children }) => {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [dark]);
+
+  const toggleTheme = () => {
+    setDark(!dark);
+  };
+
+  return (
+    <ThemeContext.Provider value={{ dark, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+export default ThemeProvider;
+```
+
+---
+
+# Step 2 — Custom Hook
+
+## src/hooks/useTheme.js
+
+```js id="th3"
+import { useContext } from "react";
+import { ThemeContext } from "@/context/ThemeProvider";
+
+const useTheme = () => {
+  return useContext(ThemeContext);
+};
+
+export default useTheme;
+```
+
+---
+
+# Step 3 — Wrap App
+
+## App.jsx
+
+```jsx id="th4"
+import { RouterProvider } from "react-router-dom";
+import router from "./router/router";
+import { Toaster } from "react-hot-toast";
+import ThemeProvider from "./context/ThemeProvider";
+
+function App() {
+  return (
+    <ThemeProvider>
+      <div className="app-page">
+        <RouterProvider router={router} />
+        <Toaster position="top-right" />
+      </div>
+    </ThemeProvider>
+  );
+}
+
+export default App;
+```
+
+---
+
+# Step 4 — Use Anywhere
+
+## Example Navbar.jsx
+
+```jsx id="th5"
+import useTheme from "@/hooks/useTheme";
+
+const Navbar = () => {
+  const { dark, toggleTheme } = useTheme();
+
+  return (
+    <button onClick={toggleTheme} className="app-button px-4 py-2">
+      {dark ? "Light" : "Dark"}
+    </button>
+  );
+};
+
+export default Navbar;
+```
+
+---
+
+# Result
+
+এখন:
+
+- App.jsx clean ✅
+- Theme centralized ✅
+- Reusable anywhere ✅
+- Production-grade ✅
+- ERP/SaaS architecture ✅
+
+---
+
+# Future Upgrade Easily Possible
+
+এখন খুব সহজে add করতে পারবা:
+
+- localStorage theme save
+- system theme detect
+- multiple themes
+- custom color palettes
+- dynamic branding
+
+এই architecture long-term এর জন্য অনেক better 😄
 
 # PHASE 3 — AUTHENTICATION
 

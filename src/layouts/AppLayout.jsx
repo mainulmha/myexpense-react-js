@@ -8,7 +8,7 @@ export default function AppLayout() {
     return (
         <div>
             <Navbar />
-            <main>
+            <main className="max-w-11/12 mx-auto">
                 <Outlet />
             </main>
             <Footer />
