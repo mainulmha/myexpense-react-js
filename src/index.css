@@ -5,12 +5,7 @@
 ========================= */
 
 :root {
-  /* --bg: #ffffff;
-  --surface: #f8fafc;
-  --card: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0; */
+
 
   --bg: #f8fafc;
   --card: #ffffff;
@@ -21,6 +16,16 @@
   --income: #059669;
   --expense: #dc2626;
   --invest: #7c3aed;
+
+  --navbar: rgba(255, 255, 255, 0.8);
+
+  --nav-surface: rgba(15, 23, 42, 0.04);
+
+  --nav-border: rgba(15, 23, 42, 0.08);
+
+  --nav-text: #0f172a;
+
+  --nav-hover: rgba(15, 23, 42, 0.06);
 }
 
 /* =========================
@@ -34,6 +39,17 @@
   --text: #e5e7eb;
   --muted: #94a3b8;
   --border: rgba(31, 41, 55, 0.5);
+
+
+  --navbar: rgba(2, 6, 23, 0.7);
+
+  --nav-surface: rgba(255, 255, 255, 0.03);
+
+  --nav-border: rgba(255, 255, 255, 0.05);
+
+  --nav-text: #ffffff;
+
+  --nav-hover: rgba(255, 255, 255, 0.05);
 }
 
 /* =========================
@@ -46,6 +62,9 @@
     @apply min-h-screen bg-[var(--bg)] text-[var(--text)] transition-all;
   }
 
+  .container {
+    @apply max-w-[1264px] mx-auto
+  }
 
   .app-input {
     @apply bg-[var(--surface)] border border-[var(--border)] rounded-xl text-[var(--text)] outline-none;
@@ -70,6 +89,19 @@
 
   .card-icon {
     @apply p-1 rounded-xl border text-3xl
+  }
+
+  /* Section Header */
+  .section-title {
+    @apply text-[10px] font-black uppercase tracking-widest text-gray-500
+  }
+
+  .nav-li {
+    @apply px-4 py-2 rounded-xl text-(--nav-text) text-sm font-semibold cursor-pointer transition-all
+  }
+
+  .nav-icons {
+    @apply w-10 h-10 rounded-4xl flex items-center justify-center text-(--nav-text) hover:bg-(--nav-hover) hover:text-(--text) transition-all cursor-pointer
   }
 
 }
