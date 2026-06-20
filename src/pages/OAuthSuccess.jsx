@@ -1,17 +1,12 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
 import authAPI from "@/services/authAPI";
 
 export default function OAuthSuccess() {
-    const navigate = useNavigate();
-    const { setAuthData } = useAuth();
-
     useEffect(() => {
         const token = new URLSearchParams(window.location.search).get("token");
 
         if (!token) {
-            navigate("/login", { replace: true });
+            window.location.replace("/login");
             return;
         }
 
@@ -21,20 +16,20 @@ export default function OAuthSuccess() {
                 const response = await authAPI.get("/me");
 
                 if (response.data?.success && response.data?.user) {
-                    setAuthData(response.data.user, token);
+                    localStorage.setItem("user", JSON.stringify(response.data.user));
+                    window.location.replace("/dashboard");
                 } else {
                     localStorage.removeItem("token");
+                    window.location.replace("/login");
                 }
-            } catch (error) {
-                console.error("OAuth error:", error);
+            } catch {
                 localStorage.removeItem("token");
-            } finally {
-                navigate("/dashboard", { replace: true });
+                window.location.replace("/login");
             }
         };
 
         fetchUser();
-    }, [navigate, setAuthData]);
+    }, []);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-(--bg)">
