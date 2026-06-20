@@ -12,15 +12,16 @@ import Profile from "@/pages/Profile";
 import Report from "@/pages/Report";
 import PrivateRoute from "./PrivateRoute";
 import Settings from "@/pages/Settings";
+import OAuthSuccess from "@/pages/OAuthSuccess";
 
 const router = createBrowserRouter([
-    // Private Router
+    // Private Routes
     {
-        element:
+        element: (
             <PrivateRoute>
                 <AppLayout />
             </PrivateRoute>
-        ,
+        ),
         children: [
             { path: "/", element: <Navigate to="/dashboard" /> },
             { path: "/dashboard", element: <Dashboard /> },
@@ -28,10 +29,10 @@ const router = createBrowserRouter([
             { path: "/profile", element: <Profile /> },
             { path: "/settings", element: <Settings /> },
             { path: "/report", element: <Report /> },
-        ]
+        ],
     },
 
-    // Public Router
+    // Public Routes
     {
         element: <AuthLayout />,
         children: [
@@ -39,9 +40,9 @@ const router = createBrowserRouter([
             { path: "/signup", element: <Signup /> },
             { path: "/verify-email", element: <VerifyEmail /> },
             { path: "/forgot-password", element: <ForgotPassword /> },
-        ]
-    }
-])
-
+            { path: "/oauth-success", element: <OAuthSuccess /> },
+        ],
+    },
+]);
 
 export default router;
