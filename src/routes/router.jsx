@@ -2,9 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import AuthLayout from "@/layouts/AuthLayout";
 import Signin from "@/pages/auth/Signin";
-import Signup from "@/pages/auth/Signup";
 import VerifyEmail from "@/pages/auth/VerifyEmail";
-import ForgotPassword from "@/pages/auth/ForgotPassword";
 import Dashboard from "@/pages/auth/Dashboard";
 import AppLayout from "@/layouts/AppLayout";
 import Charts from "@/pages/Charts";
@@ -37,10 +35,11 @@ const router = createBrowserRouter([
         element: <AuthLayout />,
         children: [
             { path: "/login", element: <Signin /> },
-            { path: "/signup", element: <Signup /> },
             { path: "/verify-email", element: <VerifyEmail /> },
-            { path: "/forgot-password", element: <ForgotPassword /> },
             { path: "/oauth-success", element: <OAuthSuccess /> },
+            // Redirect removed pages to login
+            { path: "/signup", element: <Navigate to="/login" replace /> },
+            { path: "/forgot-password", element: <Navigate to="/login" replace /> },
         ],
     },
 ]);
