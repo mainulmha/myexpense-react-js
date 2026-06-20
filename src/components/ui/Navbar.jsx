@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Moon, Sun, Bell, Menu, X, User, Settings, LogOut, LayoutDashboard, BarChart2, FileText, ChevronRight } from "lucide-react";
 import useTheme from "@/hooks/useTheme";
@@ -175,7 +175,6 @@ export default function Navbar() {
 
                     </div>
                 </>
-            )}
         </>
     );
 }
