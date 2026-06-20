@@ -4,6 +4,7 @@ import { Moon, Sun, Bell, Menu, X, User, Settings, LogOut, LayoutDashboard, BarC
 import useTheme from "@/hooks/useTheme";
 import { useAuth } from "@/context/AuthContext";
 import Logo from "@/components/ui/Logo";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const NAV_LINKS = [
     { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
@@ -178,31 +179,17 @@ export default function Navbar() {
                     </div>
                 </>
 
-            {/* Logout Confirmation Modal */}
-            <div className={`fixed inset-0 z-200 flex items-center justify-center transition-all duration-200 ${confirmLogout ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmLogout(false)} />
-                <div className={`relative bg-(--card) border border-(--border) rounded-3xl p-7 w-full max-w-sm mx-4 shadow-2xl transition-all duration-200 ${confirmLogout ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}>
-                    <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                        <LogOut size={24} className="text-red-500" />
-                    </div>
-                    <h3 className="text-lg font-black text-(--text) text-center mb-1">Sign Out?</h3>
-                    <p className="text-sm text-(--muted) text-center mb-7">Are you sure you want to sign out of your account?</p>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => setConfirmLogout(false)}
-                            className="flex-1 h-11 rounded-2xl border border-(--border) text-sm font-semibold text-(--text) hover:bg-(--nav-hover) transition-all"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleLogout}
-                            className="flex-1 h-11 rounded-2xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-all active:scale-[0.97]"
-                        >
-                            Sign Out
-                        </button>
-                    </div>
-                </div>
-            </div>
+            {/* Logout Confirmation */}
+            <ConfirmModal
+                open={confirmLogout}
+                onClose={() => setConfirmLogout(false)}
+                onConfirm={handleLogout}
+                icon={<LogOut size={24} className="text-red-500" />}
+                title="Sign Out?"
+                description="Are you sure you want to sign out of your account?"
+                confirmLabel="Sign Out"
+                confirmClassName="bg-red-500 hover:bg-red-600 text-white"
+            />
 
         </>
     );
