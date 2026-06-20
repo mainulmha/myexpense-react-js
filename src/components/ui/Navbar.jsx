@@ -5,6 +5,7 @@ import {
     Moon,
     Sun,
     Bell,
+    Menu,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -14,7 +15,7 @@ export default function Navbar() {
     return (
 
         <nav className="container border-b border-(--border) bg-(--navbar) backdrop-blur-xl">
-            <div className="h-20 px-5 grid grid-cols-3 items-center">
+            <div className="h-20 grid grid-cols-3 items-center">
                 {/* LEFT */}
                 <div className="flex items-center">
                     <Logo />
@@ -36,7 +37,7 @@ export default function Navbar() {
                     {/* Notification */}
 
                     <button className="nav-icons">
-                        <Bell size={18} />
+                        <Bell size={24} />
                     </button>
 
                     {/* Theme Toggle */}
@@ -48,8 +49,8 @@ export default function Navbar() {
 
                         {
                             dark
-                                ? <Sun size={18} />
-                                : <Moon size={18} />
+                                ? <Sun size={24} />
+                                : <Moon size={24} />
                         }
 
                     </button>
@@ -58,6 +59,7 @@ export default function Navbar() {
 
                     <div
                         className="
+                            hidden
                             ml-1
 
                             w-10
@@ -67,7 +69,7 @@ export default function Navbar() {
 
                             bg-blue-600
 
-                            flex
+                            md:flex
                             items-center
                             justify-center
 
@@ -84,7 +86,12 @@ export default function Navbar() {
                         M
                     </div>
 
+                    <button className="md:hidden font-black ml-3">
+                        <Menu size={24} />
+                    </button>
                 </div>
+
+
 
             </div>
 
