@@ -15,10 +15,9 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const checkAuth = async () => {
+    const checkAuth = () => {
         const token = localStorage.getItem("token");
         const userData = localStorage.getItem("user");
-
         if (token && userData) {
             try {
                 setUser(JSON.parse(userData));
@@ -28,40 +27,6 @@ export const AuthProvider = ({ children }) => {
             }
         }
         setLoading(false);
-    };
-
-    const login = async (credentials) => {
-        try {
-            const res = await authAPI.post("/login", credentials);
-            if (res.data.success) {
-                localStorage.setItem("token", res.data.token);
-                localStorage.setItem("user", JSON.stringify(res.data.user));
-                setUser(res.data.user);
-                setIsAuthenticated(true);
-                toast.success("Welcome back!");
-                return true;
-            }
-        } catch (error) {
-            if (error.response?.data?.needsVerification) {
-                toast.error("Please verify your email first! Check your inbox.");
-            } else {
-                toast.error(error.response?.data?.message || "Login failed");
-            }
-            return false;
-        }
-    };
-
-    const register = async (userData) => {
-        try {
-            const res = await authAPI.post("/register", userData);
-            if (res.data.success) {
-                toast.success(res.data.message || "Registration successful! Check your email to verify.");
-                return true;
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Registration failed");
-            return false;
-        }
     };
 
     const setAuthData = (userData, token) => {
@@ -74,8 +39,6 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        localStorage.removeItem("forgotPasswordStep");
-        localStorage.removeItem("forgotPasswordData");
         setUser(null);
         setIsAuthenticated(false);
         toast.success("Logged out successfully");
@@ -87,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, isAuthenticated, login, register, logout, updateUser, setAuthData }}>
+        <AuthContext.Provider value={{ user, loading, isAuthenticated, logout, updateUser, setAuthData }}>
             {children}
         </AuthContext.Provider>
     );
