@@ -24,7 +24,7 @@ export default function Dashboard() {
         setLoading(true);
         try {
             const [reportRes, balanceRes, trendRes, catRes] = await Promise.all([
-                expenseAPI.get("/report/all?page=1&limit=10"),
+                expenseAPI.get("/report/day-wise-report?page=1&limit=10"),
                 expenseAPI.get("/balance"),
                 expenseAPI.get("/report/monthly-trend"),
                 expenseAPI.get("/chart/category?type=expense"),

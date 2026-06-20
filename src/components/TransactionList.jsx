@@ -107,9 +107,9 @@ export default function TransactionList({ data = [], loading }) {
                         {/* Expandable content */}
                         {isOpen && (
                             <div className="px-4 pb-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
-                                <Section type="income"     items={group.items.filter(i => i.type === "income")} />
-                                <Section type="expense"    items={group.items.filter(i => i.type === "expense")} />
-                                <Section type="investment" items={group.items.filter(i => i.type === "investment")} />
+                                <Section type="income"     items={(group.items || []).filter(i => i.type === "income")} />
+                                <Section type="expense"    items={(group.items || []).filter(i => i.type === "expense")} />
+                                <Section type="investment" items={(group.items || []).filter(i => i.type === "investment")} />
                             </div>
                         )}
                     </div>
