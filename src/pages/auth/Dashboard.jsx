@@ -13,24 +13,21 @@ import expenseAPI from "@/services/expenseAPI";
 
 export default function Dashboard() {
     const [modalOpen, setModalOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
-    const [transactions, setTransactions] = useState([]);
     const [balance, setBalance] = useState({ income: 0, expense: 0, balance: 0, investment: 0 });
     const [monthlyTrend, setMonthlyTrend] = useState([]);
     const [categoryData, setCategoryData] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loadingCards, setLoadingCards] = useState(true);
 
-    const fetchAll = useCallback(async () => {
-        setLoading(true);
+    const fetchSummary = useCallback(async () => {
+        setLoadingCards(true);
         try {
-            const [reportRes, balanceRes, trendRes, catRes] = await Promise.all([
-                expenseAPI.get("/report/day-wise-report?page=1&limit=10"),
+            const [balanceRes, trendRes, catRes] = await Promise.all([
                 expenseAPI.get("/balance"),
                 expenseAPI.get("/report/monthly-trend"),
                 expenseAPI.get("/chart/category?type=expense"),
             ]);
-
-            setTransactions(reportRes.data?.data || []);
 
             const b = balanceRes.data?.data || balanceRes.data || {};
             setBalance({
@@ -41,15 +38,25 @@ export default function Dashboard() {
             });
 
             setMonthlyTrend(trendRes.data?.data || []);
-            setCategoryData(catRes.data?.data || []);
+
+            const rawCat = catRes.data?.data || catRes.data || [];
+            setCategoryData(rawCat.map((item) => ({
+                category: item._id || item.category,
+                amount:   item.total || item.amount || 0,
+            })));
         } catch {
-            // errors handled by expenseAPI interceptor (401 → /login)
+            // 401 handled by expenseAPI interceptor
         } finally {
-            setLoading(false);
+            setLoadingCards(false);
         }
     }, []);
 
-    useEffect(() => { fetchAll(); }, [fetchAll]);
+    useEffect(() => { fetchSummary(); }, [fetchSummary]);
+
+    const handleEntryAdded = () => {
+        fetchSummary();
+        setRefreshKey((k) => k + 1);
+    };
 
     return (
         <div>
@@ -80,20 +87,20 @@ export default function Dashboard() {
                 </ChartCard>
             </div>
 
-            {/* Transaction List */}
-            <div className="mt-8">
+            {/* Transaction List — self-contained with filters */}
+            <div className="mt-8 mb-8">
                 <div className="flex items-center gap-2 mb-4">
                     <List size={14} className="text-blue-500" />
-                    <span className="section-title">Recent Transactions</span>
+                    <span className="section-title">Transactions</span>
                 </div>
-                <TransactionList data={transactions} loading={loading} />
+                <TransactionList refreshTrigger={refreshKey} />
             </div>
 
             {/* New Entry Modal */}
             <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New Entry">
                 <AddEntryForm
                     onClose={() => setModalOpen(false)}
-                    onSuccess={fetchAll}
+                    onSuccess={handleEntryAdded}
                 />
             </Modal>
         </div>

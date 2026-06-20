@@ -1,120 +1,208 @@
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, ListFilter } from "lucide-react";
 import { getCategoryIcon } from "@/constants/categoryIcons";
+import expenseAPI from "@/services/expenseAPI";
 
-const TYPE_STYLE = {
-    income:     { label: "Income",     text: "text-green-500",  border: "border-green-500/15",  bg: "bg-green-500/5"  },
-    expense:    { label: "Expense",    text: "text-red-500",    border: "border-red-500/15",    bg: "bg-red-500/5"    },
-    investment: { label: "Investment", text: "text-violet-500", border: "border-violet-500/15", bg: "bg-violet-500/5" },
+const ALL_CATEGORIES = [
+    "food", "transport", "shopping", "bills", "medicine", "rent",
+    "recharge", "entertainment", "travel", "gold", "internet bill", "dish bill",
+    "salary", "freelance", "investment", "dps", "fdr", "share", "other",
+];
+
+const TYPE_BADGE = {
+    expense:    "bg-red-500/10 text-red-500 border-red-500/20",
+    income:     "bg-green-500/10 text-green-500 border-green-500/20",
+    investment: "bg-violet-500/10 text-violet-500 border-violet-500/20",
 };
 
-function capitalize(str) {
-    if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1);
+const AMOUNT_COLOR = {
+    expense:    "text-red-400",
+    income:     "text-green-400",
+    investment: "text-violet-400",
+};
+
+const AMOUNT_SIGN = { expense: "−", income: "+", investment: "+" };
+
+function groupByDate(transactions) {
+    const groups = {};
+    transactions.forEach((t) => {
+        const d = new Date(t.date);
+        const key = d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).toUpperCase();
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(t);
+    });
+    return Object.entries(groups);
 }
 
-function Section({ type, items }) {
-    const s = TYPE_STYLE[type];
-    return (
-        <div className={`rounded-2xl border p-4 ${s.border} ${s.bg}`}>
-            <div className={`flex items-center justify-between mb-3 pb-2 border-b ${s.border}`}>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${s.text}`}>{s.label}</span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 ${s.text}`}>{items.length}</span>
-            </div>
-            <div className="space-y-3">
-                {items.length === 0 ? (
-                    <p className="text-xs text-(--muted) italic py-1">Empty</p>
-                ) : items.map((item) => {
-                    const icon = getCategoryIcon(item.category);
-                    return (
-                        <div key={item._id} className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2.5 overflow-hidden">
-                                <div
-                                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-base"
-                                    style={{ backgroundColor: icon.bg }}
-                                >
-                                    {icon.emoji}
-                                </div>
-                                <div className="overflow-hidden">
-                                    <p className="text-xs font-bold text-(--text) truncate leading-tight">{capitalize(item.category)}</p>
-                                    {item.description && (
-                                        <p className="text-[11px] text-(--muted) truncate mt-0.5">{item.description}</p>
-                                    )}
-                                </div>
-                            </div>
-                            <p className={`text-xs font-black shrink-0 ${s.text}`}>৳{item.amount.toLocaleString()}</p>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-}
+export default function TransactionList({ refreshTrigger }) {
+    const [transactions, setTransactions] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(true);
 
-export default function TransactionList({ data = [], loading }) {
-    const [openIndex, setOpenIndex] = useState(0);
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [type, setType] = useState("all");
+    const [category, setCategory] = useState("all");
 
-    if (loading) return (
-        <div className="flex justify-center py-12">
-            <div className="w-7 h-7 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-        </div>
-    );
+    const fetchTransactions = useCallback(async (overrides = {}) => {
+        setLoading(true);
+        try {
+            const sd  = overrides.startDate  ?? startDate;
+            const ed  = overrides.endDate    ?? endDate;
+            const tp  = overrides.type       ?? type;
+            const cat = overrides.category   ?? category;
 
-    if (data.length === 0) return (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <span className="text-4xl">🗒️</span>
-            <p className="text-xs font-black uppercase tracking-widest text-(--muted)">No Transactions Yet</p>
-        </div>
-    );
+            let url = "/report/all?limit=100";
+            if (sd)          url += `&startDate=${sd}`;
+            if (ed)          url += `&endDate=${ed}`;
+            if (tp !== "all")  url += `&type=${tp}`;
+            if (cat !== "all") url += `&category=${cat}`;
+
+            const res = await expenseAPI.get(url);
+            setTransactions(res.data?.data || []);
+            setTotal(res.data?.pagination?.totalItems ?? (res.data?.data?.length ?? 0));
+        } catch {
+            // 401 handled by expenseAPI interceptor
+        } finally {
+            setLoading(false);
+        }
+    }, [startDate, endDate, type, category]);
+
+    useEffect(() => { fetchTransactions(); }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const applyFilters = () => fetchTransactions();
+
+    const resetFilters = () => {
+        setStartDate(""); setEndDate(""); setType("all"); setCategory("all");
+        fetchTransactions({ startDate: "", endDate: "", type: "all", category: "all" });
+    };
+
+    const grouped = groupByDate(transactions);
 
     return (
-        <div className="space-y-3">
-            {data.map((group, index) => {
-                const isOpen = openIndex === index;
-                const date = new Date(group._id.year, group._id.month - 1, group._id.day);
+        <div className="space-y-4">
 
-                return (
-                    <div
-                        key={index}
-                        className={`rounded-2xl border transition-all duration-300 ${isOpen ? "border-(--border) bg-(--card)" : "border-(--border) bg-(--nav-surface)"}`}
-                    >
-                        {/* Row header */}
-                        <div
-                            onClick={() => setOpenIndex(isOpen ? null : index)}
-                            className="flex items-center justify-between p-4 cursor-pointer"
-                        >
-                            <div className="flex items-center gap-4">
-                                {/* Date badge */}
-                                <div className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center font-bold border shrink-0 ${isOpen ? "bg-blue-600 border-blue-500 text-white" : "bg-(--input-bg) border-(--border) text-(--muted)"}`}>
-                                    <span className="text-sm leading-none">{group._id.day}</span>
-                                    <span className="text-[9px] uppercase mt-0.5 opacity-80">
-                                        {date.toLocaleString("default", { month: "short" })}
-                                    </span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-(--text) leading-tight">
-                                        {date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
-                                    </p>
-                                    <p className="text-[10px] font-black uppercase tracking-wider text-(--muted) mt-0.5">{group.count} transaction{group.count !== 1 ? "s" : ""}</p>
-                                </div>
-                            </div>
-                            <ChevronDown
-                                size={18}
-                                className={`text-(--muted) transition-transform duration-300 ${isOpen ? "rotate-180 text-blue-500" : ""}`}
-                            />
-                        </div>
+            {/* Quick Filters */}
+            <div className="app-card p-5">
+                <div className="flex items-center gap-2 mb-4">
+                    <Search size={13} className="text-(--muted)" />
+                    <span className="section-title">Quick Filters</span>
+                </div>
 
-                        {/* Expandable content */}
-                        {isOpen && (
-                            <div className="px-4 pb-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
-                                <Section type="income"     items={(group.items || []).filter(i => i.type === "income")} />
-                                <Section type="expense"    items={(group.items || []).filter(i => i.type === "expense")} />
-                                <Section type="investment" items={(group.items || []).filter(i => i.type === "investment")} />
-                            </div>
-                        )}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                        <label className="app-kicker block mb-1.5">Start Date</label>
+                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                            className="app-field" />
                     </div>
-                );
-            })}
+                    <div>
+                        <label className="app-kicker block mb-1.5">End Date</label>
+                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                            className="app-field" />
+                    </div>
+                    <div>
+                        <label className="app-kicker block mb-1.5">Type</label>
+                        <select value={type} onChange={(e) => setType(e.target.value)} className="app-field">
+                            <option value="all">All Types</option>
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                            <option value="investment">Investment</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="app-kicker block mb-1.5">Category</label>
+                        <select value={category} onChange={(e) => setCategory(e.target.value)} className="app-field">
+                            <option value="all">All Categories</option>
+                            {ALL_CATEGORIES.map((c) => (
+                                <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-(--border)">
+                    <button onClick={applyFilters}
+                        className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95">
+                        Apply Filters
+                    </button>
+                    <button onClick={resetFilters}
+                        className="px-5 py-2 bg-(--input-bg) hover:bg-(--nav-hover) text-(--muted) rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            {/* Transaction Logs */}
+            <div className="app-card overflow-hidden p-0">
+
+                {/* Header */}
+                <div className="px-5 py-3 border-b border-(--border) flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <ListFilter size={13} className="text-(--muted)" />
+                        <span className="section-title">Transaction Logs</span>
+                    </div>
+                    <span className="text-[9px] font-black text-blue-500 bg-blue-500/5 px-2 py-1 rounded-lg border border-blue-500/10 uppercase">
+                        {total} Items
+                    </span>
+                </div>
+
+                {/* Body */}
+                {loading ? (
+                    <div className="py-16 flex justify-center">
+                        <div className="w-7 h-7 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                    </div>
+                ) : grouped.length === 0 ? (
+                    <div className="py-16 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-(--muted)">No Transactions Found</p>
+                    </div>
+                ) : (
+                    grouped.map(([date, items]) => (
+                        <div key={date}>
+                            {/* Date header */}
+                            <div className="px-5 py-2 bg-(--nav-surface) border-y border-(--border) flex justify-between items-center">
+                                <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">{date}</span>
+                                <span className="text-[9px] font-bold uppercase text-(--muted)">{items.length} TXNS</span>
+                            </div>
+
+                            {/* Items */}
+                            <div className="divide-y divide-(--border)">
+                                {items.map((t, idx) => {
+                                    const icon = getCategoryIcon(t.category);
+                                    return (
+                                        <div key={idx} className="flex items-center justify-between px-5 py-3.5 hover:bg-(--nav-surface) transition-colors">
+                                            <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                                                {/* Icon */}
+                                                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl"
+                                                    style={{ backgroundColor: icon.bg }}>
+                                                    {icon.emoji}
+                                                </div>
+                                                {/* Info */}
+                                                <div className="overflow-hidden">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[11px] font-black uppercase text-(--text) tracking-tight">
+                                                            {t.category}
+                                                        </span>
+                                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase ${TYPE_BADGE[t.type]}`}>
+                                                            {t.type}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[11px] text-(--muted) mt-0.5 truncate">
+                                                        {t.description || "..."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {/* Amount */}
+                                            <p className={`text-sm font-black shrink-0 ml-4 ${AMOUNT_COLOR[t.type]}`}>
+                                                {AMOUNT_SIGN[t.type]}৳{t.amount.toLocaleString()}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
         </div>
     );
 }
