@@ -143,7 +143,7 @@ export default function AddEntryForm({ onClose, onSuccess }) {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="flex-[2] h-11 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-sm font-semibold text-white transition-all active:scale-[0.98]"
+                    className="flex-2 h-11 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-sm font-semibold text-white transition-all active:scale-[0.98]"
                 >
                     {loading ? "Adding..." : "Add Transaction"}
                 </button>

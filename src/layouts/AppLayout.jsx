@@ -11,7 +11,6 @@ export default function AppLayout() {
             <main className="container">
                 <Outlet />
             </main>
-            {/* <Footer /> */}
         </div>
     )
 }
