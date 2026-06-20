@@ -18,6 +18,7 @@ export default function Navbar() {
     const location = useLocation();
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [confirmLogout, setConfirmLogout] = useState(false);
 
     const isActive = (path) => location.pathname === path;
 
@@ -28,6 +29,7 @@ export default function Navbar() {
 
     const handleLogout = () => {
         logout();
+        setConfirmLogout(false);
         setSidebarOpen(false);
         navigate("/login");
     };
@@ -165,7 +167,7 @@ export default function Navbar() {
                         {/* Logout */}
                         <div className="p-5 border-t border-(--border)">
                             <button
-                                onClick={handleLogout}
+                                onClick={() => setConfirmLogout(true)}
                                 className="w-full py-3.5 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all duration-300 flex items-center justify-center gap-2"
                             >
                                 <LogOut size={15} />
@@ -175,6 +177,33 @@ export default function Navbar() {
 
                     </div>
                 </>
+
+            {/* Logout Confirmation Modal */}
+            <div className={`fixed inset-0 z-200 flex items-center justify-center transition-all duration-200 ${confirmLogout ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmLogout(false)} />
+                <div className={`relative bg-(--card) border border-(--border) rounded-3xl p-7 w-full max-w-sm mx-4 shadow-2xl transition-all duration-200 ${confirmLogout ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}>
+                    <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <LogOut size={24} className="text-red-500" />
+                    </div>
+                    <h3 className="text-lg font-black text-(--text) text-center mb-1">Sign Out?</h3>
+                    <p className="text-sm text-(--muted) text-center mb-7">Are you sure you want to sign out of your account?</p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setConfirmLogout(false)}
+                            className="flex-1 h-11 rounded-2xl border border-(--border) text-sm font-semibold text-(--text) hover:bg-(--nav-hover) transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            className="flex-1 h-11 rounded-2xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-all active:scale-[0.97]"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </>
     );
 }
